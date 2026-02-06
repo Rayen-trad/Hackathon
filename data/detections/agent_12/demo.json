@@ -1,0 +1,36 @@
+{
+  "conversation_id": "conv_demo",
+  "agent_id": "agent_12",
+  "incident_count": 4,
+  "overall_severity": 0.8,
+  "hate_events": [
+    {
+      "timestamp": "00:08",
+      "speaker": "customer",
+      "text": "You are all idiots and completely useless.",
+      "category": "insult",
+      "severity": 0.5
+    },
+    {
+      "timestamp": "00:14",
+      "speaker": "customer",
+      "text": "This company is garbage and you people are stupid.",
+      "category": "insult",
+      "severity": 0.6
+    },
+    {
+      "timestamp": "00:21",
+      "speaker": "customer",
+      "text": "Fuck you and your stupid service.",
+      "category": "profanity",
+      "severity": 0.7
+    },
+    {
+      "timestamp": "00:29",
+      "speaker": "customer",
+      "text": "I hate you people, you're worthless.",
+      "category": "hate_speech",
+      "severity": 0.8
+    }
+  ]
+}
