@@ -112,6 +112,30 @@
     </div>
 </div>
 
+<div class="card" style="border-left: 4px solid var(--sentiel-accent); margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 1rem; color: var(--sentiel-accent);">🤖 AI Summary & Recommendation</h3>
+    <div style="background: rgba(255, 255, 255, 0.02); padding: 1.5rem; border-radius: 0.5rem;">
+        <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 1rem;">
+            {{ report.summary.summary }}
+        </p>
+        <div style="display: flex; gap: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem;">
+            <div>
+                <span class="stat-label" style="display: block; font-size: 0.7rem;">RISK LEVEL</span>
+                <span class="severity-badge 
+                    {% if report.summary.risk_level == 'High' %}severity-critical
+                    {% elif report.summary.risk_level == 'Medium' %}severity-abusive
+                    {% else %}severity-safe{% endif %}">
+                    {{ report.summary.risk_level }}
+                </span>
+            </div>
+            <div>
+                <span class="stat-label" style="display: block; font-size: 0.7rem;">RECOMMENDATION</span>
+                <p style="font-size: 0.9rem; color: var(--text-dim);">{{ report.summary.recommendation }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center;">
         Analysis Transcript
@@ -138,9 +162,9 @@
     <h3 style="margin-bottom: 1.5rem; color: var(--accent);">Flagged Events</h3>
     {% for event in report.hate_events %}
     <div class="flagged">
-        <span class="speaker speaker-customer">CUSTOMER | {{ event.timestamp }} <span class="severity-pill">Severity: {{
-                event.severity }}</span></span>
-        <p class="text">{{ event.text }}</p>
+        <span class="speaker speaker-customer">CUSTOMER | {{ event.timestamp }} <span class="severity-pill">
+                Severity: {{ event.severity }}</span></span>
+
         <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--accent)">Category: {{ event.category }}</p>
     </div>
     {% endfor %}

@@ -216,6 +216,42 @@
         margin-bottom: 1rem;
         opacity: 0.3;
     }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background-color: var(--sentiel-panel);
+        margin: 5% auto;
+        padding: 2rem;
+        border: 1px solid var(--sentiel-accent);
+        border-radius: 1rem;
+        width: 60%;
+        max-width: 800px;
+        box-shadow: 0 0 30px rgba(177, 140, 251, 0.2);
+    }
+
+    .close-modal {
+        color: var(--text-dim);
+        float: right;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close-modal:hover {
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -288,6 +324,7 @@
                 <th>Severity</th>
                 <th>Incidents</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -318,10 +355,16 @@
                     <span style="color: var(--sentiel-safe);">✓ SAFE</span>
                     {% endif %}
                 </td>
+                <td>
+                    <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                        onclick="showSummary('{{ report.conversation_id|escapejs }}', '{{ report.summary|escapejs }}', '{{ report.overall_severity }}', '{{ report.incident_count }}')">
+                        View Analysis
+                    </button>
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5">
+                <td colspan="6">
                     <div class="empty-state">
                         <div class="empty-state-icon">📭</div>
                         <p>No reports yet. Upload your first call to get started.</p>
@@ -332,5 +375,50 @@
         </tbody>
     </table>
 </div>
+<!-- Modal -->
+<div id="summaryModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle" style="color: var(--sentiel-accent); margin-bottom: 1.5rem;">Analysis Summary</h2>
+        <div id="modalBody">
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Overview</h4>
+                <p id="modalText" style="font-size: 1.1rem; line-height: 1.6;"></p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="stat-card" style="padding: 1rem;">
+                    <span class="stat-label" style="font-size: 0.6rem;">Severity Score</span>
+                    <span id="modalSeverity" class="stat-value" style="font-size: 1.5rem;"></span>
+                </div>
+                <div class="stat-card" style="padding: 1rem;">
+                    <span class="stat-label" style="font-size: 0.6rem;">Incident Count</span>
+                    <span id="modalIncidents" class="stat-value" style="font-size: 1.5rem;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showSummary(id, summary, severity, incidents) {
+        document.getElementById('modalTitle').innerText = 'Analysis: ' + id.substring(0, 12);
+        document.getElementById('modalText').innerText = summary;
+        document.getElementById('modalSeverity').innerText = severity;
+        document.getElementById('modalIncidents').innerText = incidents;
+        document.getElementById('summaryModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('summaryModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        var modal = document.getElementById('summaryModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
 {% endif %}
 {% endblock %}

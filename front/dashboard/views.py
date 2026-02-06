@@ -8,6 +8,9 @@ from django.core.files.storage import FileSystemStorage
 # Import existing AI services from parent directory
 from services.speech_to_text import transcribe_call
 from ai.hate_detector import detect_hate_from_textfile
+from ai.summarizer import summarize_hate_report
+from ai.therapy_bot import agent_therapy_chat
+from ai.manager_coach import coach_manager
 
 def upload_audio(request):
     if request.method == 'POST':
@@ -50,6 +53,17 @@ def upload_audio(request):
             except Exception as e:
                 print(f"DEBUG: Hate detection failed: {str(e)}")
                 return render(request, 'dashboard/upload.html', {'error': f"Hate detection failed: {str(e)}"})
+            
+            # 4. Generate Summary
+            print("DEBUG: Generating summary...")
+            try:
+                summary = summarize_hate_report(report)
+                report['summary'] = summary
+                print("DEBUG: Summary complete.")
+            except Exception as e:
+                print(f"DEBUG: Summarization failed: {str(e)}")
+                # Continue anyway, summary is non-critical
+                report['summary'] = None
             
             # Store report in session
             request.session['last_report'] = report
@@ -99,6 +113,13 @@ def admin_dashboard(request):
             # Run hate detector on each file
             report_data = detect_hate_from_textfile(txt_file)
             
+            # Generate summary for dashboard
+            try:
+                summary_data = summarize_hate_report(report_data)
+                report_data['summary'] = summary_data.get('summary', 'No summary available.')
+            except:
+                report_data['summary'] = 'Summary error.'
+            
             # Get file timestamp
             file_stat = os.stat(txt_file)
             created_time = datetime.fromtimestamp(file_stat.st_mtime)
@@ -146,3 +167,29 @@ def admin_dashboard(request):
     }
     
     return render(request, 'dashboard/admin.html', context)
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+def therapy_chat(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            message = data.get('message', '')
+            agent_id = data.get('agent_id', 'unknown_agent')
+            mode = data.get('mode', 'therapy')
+            
+            if mode == 'coach':
+                response_data = coach_manager(agent_id, message)
+            else:
+                response_data = agent_therapy_chat(agent_id, message)
+                
+            return JsonResponse(response_data)
+        except Exception as e:
+            return JsonResponse({'response': f"Error: {str(e)}", 'confidence': 'low'}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=405)
+
+def therapy_chat_page(request):
+    """Renders the full-page therapy chat interface."""
+    mode = request.GET.get('mode', 'therapy')
+    return render(request, 'dashboard/chat.html', {'mode': mode})

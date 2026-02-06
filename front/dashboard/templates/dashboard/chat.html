@@ -1,0 +1,296 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}
+{% if mode == 'coach' %}Coach Chat - SafeSpace AI{% else %}Support Chat - SafeSpace AI{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        max-width: 900px;
+        margin: 0 auto;
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+    }
+
+    .chat-header-page {
+        padding: 1.5rem;
+        background: rgba(177, 140, 251, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .chat-header-icon {
+        font-size: 2rem;
+    }
+
+    .chat-header-text h2 {
+        font-size: 1.25rem;
+        color: var(--text-main);
+        margin-bottom: 0.25rem;
+    }
+
+    .chat-header-text p {
+        color: var(--text-dim);
+        font-size: 0.875rem;
+    }
+
+    .chat-messages-area {
+        flex: 1;
+        padding: 2rem;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        scroll-behavior: smooth;
+    }
+
+    .message-bubble {
+        max-width: 70%;
+        padding: 1rem 1.5rem;
+        border-radius: 1rem;
+        font-size: 1rem;
+        line-height: 1.6;
+        position: relative;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-bubble.bot {
+        background: rgba(177, 140, 251, 0.1);
+        color: var(--text-main);
+        border-bottom-left-radius: 0.25rem;
+        align-self: flex-start;
+        border: 1px solid rgba(177, 140, 251, 0.2);
+    }
+
+    .message-bubble.user {
+        background: var(--primary);
+        color: white;
+        border-bottom-right-radius: 0.25rem;
+        align-self: flex-end;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .chat-input-container {
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.5);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        gap: 1rem;
+    }
+
+    .chat-input-field {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 0.75rem;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input-field:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.08);
+        /* Slightly lighter on focus */
+    }
+
+    .send-btn {
+        background: linear-gradient(135deg, var(--primary), #a855f7);
+        color: white;
+        border: none;
+        padding: 0 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .send-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: none;
+        /* Hidden by default */
+        align-self: flex-start;
+        background: rgba(177, 140, 251, 0.05);
+        padding: 1rem;
+        border-radius: 1rem;
+        border-bottom-left-radius: 0.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .typing-dots {
+        display: flex;
+        gap: 0.3rem;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--text-dim);
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .dot:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .dot:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes bounce {
+
+        0%,
+        80%,
+        100% {
+            transform: scale(0);
+        }
+
+        40% {
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header-page">
+        <div class="chat-header-icon">{% if mode == 'coach' %}🎓{% else %}🧠{% endif %}</div>
+        <div class="chat-header-text">
+            <h2>{% if mode == 'coach' %}Manager Coach Assistant{% else %}Empathy Support Bot{% endif %}</h2>
+            <p>
+                {% if mode == 'coach' %}
+                I'm here to help you support your agents based on their incident history.
+                {% else %}
+                I'm here to listen and support you through stressful moments.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="chat-messages-area" id="messagesArea">
+        <div class="message-bubble bot">
+            {% if mode == 'coach' %}
+            Hello! Ask me about any agent, and I'll analyze their summaries to give you leadership advice.
+            {% else %}
+            Hi there. I know your job can be challenging. How are you feeling right now? I'm here to listen without
+            judgment.
+            {% endif %}
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-input-container">
+        <input type="text" id="messageInput" class="chat-input-field" placeholder="Type your message here..."
+            onkeypress="handleEnter(event)">
+        <button class="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    const messagesArea = document.getElementById('messagesArea');
+    const messageInput = document.getElementById('messageInput');
+    const typingIndicator = document.getElementById('typingIndicator');
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    async function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        // Add User Message
+        addMessage(text, 'user');
+        messageInput.value = '';
+
+        // Show Typing Indicator
+        showTyping(true);
+
+        try {
+            const response = await fetch('{% url "therapy_chat" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    message: text,
+                    // Use a generic ID or pass session-based ID if available
+                    agent_id: '{{ user.username|default:"agent" }}',
+                    mode: '{{ mode }}'
+                })
+            });
+
+            const data = await response.json();
+
+            // Hide Typing Indicator and Add Bot Message
+            showTyping(false);
+            addMessage(data.response, 'bot');
+
+        } catch (error) {
+            showTyping(false);
+            addMessage("I'm having trouble connecting right now, but please know your feelings are valid.", 'bot');
+            console.error('Chat error:', error);
+        }
+    }
+
+    function addMessage(text, type) {
+        const bubble = document.createElement('div');
+        bubble.className = `message-bubble ${type}`;
+        bubble.innerText = text;
+
+        // Insert before typing indicator
+        messagesArea.insertBefore(bubble, typingIndicator);
+
+        scrollToBottom();
+    }
+
+    function showTyping(show) {
+        typingIndicator.style.display = show ? 'block' : 'none';
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+</script>
+{% endblock %}
